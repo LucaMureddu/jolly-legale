@@ -16,6 +16,11 @@ langgraph>=0.1.0
 
 # --- Embeddings locali (zero costo, zero API) ---
 sentence-transformers>=3.0.0
+# torch + torchvision: dipendenze transitive di sentence-transformers
+# su ambienti vergini (es. Streamlit Cloud). Senza torchvision il modulo
+# fallisce l'import anche se l'app usa solo embedding testuali.
+torch>=2.0.0
+torchvision>=0.15.0
 
 # --- Vector Database ---
 chromadb>=0.5.0
