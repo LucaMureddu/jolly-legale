@@ -1,0 +1,22 @@
+# Segreti — mai committare
+.env
+
+# Ambiente virtuale
+venv/
+.venv/
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.egg-info/
+
+# Streamlit secrets
+.streamlit/secrets.toml
+
+# Sistema
+.DS_Store
+Thumbs.db
+
+# Log
+*.log

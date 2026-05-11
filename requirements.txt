@@ -1,0 +1,42 @@
+# =============================================
+# IL JOLLY LEGALE - Dipendenze di Progetto
+# =============================================
+
+# --- UI ---
+streamlit>=1.35.0
+
+# --- AI / LLM / Orchestrazione ---
+langchain>=0.2.0
+langchain-groq>=0.1.0
+langchain-huggingface>=0.0.3
+langchain-community>=0.2.0
+langchain-core>=0.2.0
+langchain-text-splitters>=0.2.0
+langgraph>=0.1.0
+
+# --- Embeddings locali (zero costo, zero API) ---
+sentence-transformers>=3.0.0
+
+# --- Vector Database ---
+chromadb>=0.5.0
+
+# --- Parsing PDF ---
+pdfplumber>=0.11.0
+PyPDF2>=3.0.0
+
+# --- Generazione Report PDF ---
+fpdf2>=2.7.0
+
+# --- Conversione Markdown ---
+markdown>=3.6
+
+# --- Utility ---
+python-dotenv>=1.0.0
+tenacity>=8.2.0
+# =============================================
+# NOTE
+# =============================================
+# - langchain-openai RIMOSSO: embeddings e LLM ora gratuiti
+# - Embeddings: HuggingFace all-MiniLM-L6-v2 (locale, zero API)
+# - LLM: Groq llama3-70b-8192 (free tier generoso)
+# - fpdf2 e' puro Python, nessuna dipendenza di sistema
