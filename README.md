@@ -176,6 +176,76 @@ sia dell'analisi che del report finale.
 
 ---
 
+## 💎 Jolly Legale: Enterprise & Air-Gapped Edition
+
+> **Quando la confidenzialita' non e' una preferenza, ma un vincolo contrattuale.**
+
+Esiste una versione privata di Jolly Legale, sviluppata su commissione per
+contesti dove il rischio di esposizione dei dati non e' tollerato a livello
+strutturale: operazioni di **M&A**, due diligence su **segreti industriali
+e brevetti**, contenziosi riservati gestiti da **studi legali tier-1** e
+dipartimenti compliance di grandi corporate.
+
+La versione pubblica che hai appena letto e' un proof-of-concept tecnico
+potente e gratuito. La versione Enterprise e' un'altra categoria di prodotto.
+
+### Architettura Air-Gapped — zero byte fuori dal perimetro
+
+Nessuna API esterna. Nessuna chiamata a Groq. Nessuna telemetria.
+Il sistema gira **interamente on-premise** sui server del cliente,
+con la possibilita' di tagliare fisicamente l'accesso a Internet
+durante l'elaborazione del materiale sensibile. La rete e' un attaccante:
+in Enterprise Edition la rete semplicemente non esiste.
+
+### Motore AI pesante — modelli locali da 26 GB
+
+L'inferenza non viene delegata a nessun cloud LLM. La versione Enterprise
+ospita modelli **Mixtral 8x7B MoE** (26 GB di parametri) e altri LLM
+avanzati tramite **Ollama**, eseguiti direttamente sull'hardware del
+cliente. Latenza prevedibile, qualita' di ragionamento legale allo stato
+dell'arte, **zero esposizione di dati a terze parti** — incluso Anthropic,
+OpenAI, Groq e qualunque altro provider cloud.
+
+### Nessun limite di scala
+
+Architettura RAG riprogettata da zero per ingerire **fascicoli contrattuali
+e Data Room fino a 500 pagine** contemporaneamente, con re-ranking
+gerarchico, chunking semantico adattivo e routing tra sotto-contratti.
+Nessun troncamento automatico, nessun free tier da rispettare,
+nessun limite di token al giorno.
+
+### Requisiti hardware
+
+Workstation dedicate dimensionate per l'esecuzione di modelli MoE:
+
+- **Apple Silicon:** Mac Studio M2/M3 Ultra con 128–192 GB di unified memory
+- **NVIDIA:** server multi-GPU (es. 2× RTX 6000 Ada, A100 80GB, H100)
+
+Setup, tuning dei modelli e hardening della macchina sono gestiti
+direttamente in fase di delivery.
+
+### Pubblica vs Enterprise
+
+| Caratteristica | Versione Pubblica | Enterprise Edition |
+|---|---|---|
+| LLM | Groq Cloud (API) | Mixtral 8x7B MoE on-premise |
+| Connettivita' | Richiesta per l'inferenza | **Air-gapped — 100% offline** |
+| Limite documenti | 30 pagine | **500+ con re-ranking gerarchico** |
+| Hardware | Qualunque laptop | Workstation dedicate |
+| Dati su server terzi | Solo contesto, in transito | **Zero — mai** |
+| Costo | Gratuito | Su preventivo |
+
+### Interessato?
+
+Se rappresenti uno studio legale, una boutique M&A, un dipartimento
+compliance o un laboratorio R&D che gestisce materiale sotto NDA stringente,
+sono disponibile per discutere un'integrazione su misura, una proof-of-value
+su un caso d'uso reale o una semplice consulenza tecnica.
+
+**[→ Contattami su LinkedIn](https://www.linkedin.com/in/luca-mureddu-095185388/)**
+
+---
+
 ## Costo Operativo
 
 | Voce | Costo |
