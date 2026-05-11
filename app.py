@@ -5,7 +5,7 @@
 import io
 import streamlit as st
 from PyPDF2 import PdfReader, PdfWriter
-from rag import ingest_pdf, ask_document
+from rag import ingest_pdf, ask_document, check_if_contract
 from agents import run_analysis_pipeline
 from report_generator import markdown_to_pdf_bytes
 import os
@@ -494,6 +494,22 @@ def main() -> None:
         st.session_state.report_md   = None
         st.session_state.report_pdf  = None
         st.session_state.filename    = uploaded_file.name
+
+        # ─── SCUDO AI — Validazione preliminare del documento ───
+        # Rigetta documenti non legali PRIMA di spendere risorse di
+        # ingestione e analisi multi-agente (Garbage In, Garbage Out).
+        with st.spinner("🛡️ Analisi preliminare del documento..."):
+            is_contract = check_if_contract(st.session_state.pdf_bytes)
+
+        if not is_contract:
+            st.error(
+                "🚫 Documento non supportato. Il Jolly Legale è calibrato "
+                "esclusivamente per l'analisi di contratti e documenti giuridici. "
+                "Il file caricato sembra avere una natura diversa "
+                "(es. bilancio, report finanziario). "
+                "Carica un documento legale valido."
+            )
+            st.stop()
 
         progress = st.progress(0)
         col1, col2, col3 = st.columns(3)

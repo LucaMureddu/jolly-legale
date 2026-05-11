@@ -151,6 +151,13 @@ jolly-legale/
 
 ## Funzionalita'
 
+**Scudo AI di Validazione Input** — prima di avviare l'analisi multi-agente,
+un classificatore Groq legge le prime 2 pagine del PDF e decide se il documento
+e' effettivamente un contratto o un atto giuridico. Bilanci, manuali tecnici,
+report finanziari e documenti non pertinenti vengono respinti immediatamente
+con un messaggio chiaro — zero allucinazioni a valle, zero risorse sprecate.
+Filosofia: Garbage In, Garbage Out.
+
 **Analisi Automatica** — carica il PDF (fino a 30 pagine, troncamento automatico
 oltre soglia) e ottieni in ~25 secondi un report con rischi classificati
 (ALTO/MEDIO/BASSO), clausole favorevoli, sommario esecutivo e raccomandazioni
@@ -187,6 +194,7 @@ Per uso enterprise intensivo, il piano a pagamento parte da $0.59/1M token.
 
 | Regola | Implementazione | Stato |
 |---|---|---|
+| Scudo AI di Validazione Input | Classificatore Groq sulle prime 2 pagine — respinge bilanci, manuali e documenti non legali | OK |
 | PDF mai su disco | Elaborazione su io.BytesIO in RAM | OK |
 | API keys in .env | python-dotenv + .gitignore | OK |
 | Zero persistenza vettori | ChromaDB senza persist_directory | OK |

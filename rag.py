@@ -104,6 +104,116 @@ def _extract_text_from_bytes(pdf_bytes: bytes) -> str:
 
 
 # -------------------------------------------------------
+# SCUDO AI — Validazione del Documento in Input
+# -------------------------------------------------------
+# Obiettivo: rigettare documenti non legali (bilanci, manuali,
+# report finanziari, ecc.) PRIMA di spendere risorse di
+# ingestione e analisi multi-agente.
+# Strategia: classificatore Groq sulle prime 2 pagine
+# (l'incipit è sufficiente per distinguere la natura del documento).
+# Filosofia: Garbage In, Garbage Out — meglio rigettare a monte
+# che produrre allucinazioni plausibili ma inutili.
+# -------------------------------------------------------
+
+def _extract_first_pages_text(pdf_bytes: bytes, n_pages: int = 2) -> str:
+    """
+    Estrae il testo SOLO dalle prime n_pages pagine del PDF.
+    Usato dallo Scudo AI per classificare la natura del documento
+    senza dover processare l'intero file.
+
+    Strategia dual-layer identica a _extract_text_from_bytes:
+      1. pdfplumber (preciso)
+      2. PyPDF2 (fallback)
+
+    Args:
+        pdf_bytes: Il contenuto del PDF come bytes.
+        n_pages:   Numero di pagine iniziali da estrarre (default: 2).
+
+    Returns:
+        Stringa con il testo concatenato delle prime n_pages pagine.
+        Stringa vuota se l'estrazione fallisce completamente.
+    """
+    text = ""
+
+    # Tentativo 1 — pdfplumber
+    try:
+        with pdfplumber.open(io.BytesIO(pdf_bytes)) as pdf:
+            pages_to_read = pdf.pages[:n_pages]
+            pages_text = [
+                page.extract_text()
+                for page in pages_to_read
+                if page.extract_text()
+            ]
+            text = "\n\n".join(pages_text)
+    except Exception:
+        text = ""
+
+    # Tentativo 2 — PyPDF2 (fallback)
+    if not text.strip():
+        try:
+            reader = PdfReader(io.BytesIO(pdf_bytes))
+            pages_to_read = reader.pages[:n_pages]
+            pages_text = [
+                page.extract_text()
+                for page in pages_to_read
+                if page.extract_text()
+            ]
+            text = "\n\n".join(pages_text)
+        except Exception:
+            text = ""
+
+    return text
+
+
+CLASSIFIER_PROMPT = ChatPromptTemplate.from_messages([
+    ("system",
+     "Sei un classificatore di documenti. Leggi questo incipit. "
+     "È un contratto, un accordo legale, una sentenza o un documento giuridico? "
+     "Rispondi ESCLUSIVAMENTE con la parola SI oppure NO. Nessun'altra parola."),
+    ("human", "{incipit}"),
+])
+
+
+def check_if_contract(pdf_bytes: bytes) -> bool:
+    """
+    Scudo AI di Validazione Input.
+
+    Classifica il documento PDF come "legale" o "non legale" analizzando
+    SOLO le prime 2 pagine — sufficienti a distinguere un contratto da
+    un bilancio, un manuale tecnico, un report finanziario, ecc.
+
+    Args:
+        pdf_bytes: Il contenuto del PDF come bytes (da st.file_uploader).
+
+    Returns:
+        True  se il documento è classificato come contratto / documento legale.
+        False se è di altra natura, oppure se la classificazione fallisce
+              (fail-safe: in caso di dubbio, non procedere).
+    """
+    incipit = _extract_first_pages_text(pdf_bytes, n_pages=2)
+
+    # Se non riusciamo a estrarre nemmeno l'incipit, fallisci safe
+    if not incipit.strip():
+        return False
+
+    llm = ChatGroq(
+        model_name=LLM_MODEL,
+        temperature=0,
+        api_key=GROQ_API_KEY,
+    )
+    chain = CLASSIFIER_PROMPT | llm
+
+    try:
+        # Tronca prudenzialmente per non saturare il context del classificatore
+        response = _invoke_with_backoff(chain, {"incipit": incipit[:4000]})
+        answer = response.content.strip().upper()
+        return "SI" in answer
+    except Exception:
+        # In caso di errore del classificatore, fallisci safe
+        return False
+
+
+# -------------------------------------------------------
 # FUNZIONE PUBBLICA: Ingestione completa del PDF
 # -------------------------------------------------------
 
