@@ -24,7 +24,10 @@ def _make_pdf_bytes(text: str = "CONTRATTO DI LOCAZIONE\nLe parti concordano qua
         pdf = FPDF()
         pdf.add_page()
         pdf.set_font("Helvetica", size=12)
-        pdf.multi_cell(0, 10, text)
+        # Helvetica supporta solo Latin-1: sostituisci caratteri fuori range
+        # (es. em-dash —, €, ecc.) con il carattere più vicino ASCII.
+        safe_text = text.encode("latin-1", errors="replace").decode("latin-1")
+        pdf.multi_cell(0, 10, safe_text)
         return bytes(pdf.output())
     except ImportError:
         pass
