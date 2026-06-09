@@ -16,7 +16,7 @@ from langgraph.graph import StateGraph, END
 
 from dotenv import load_dotenv
 from rag import query_vector_db
-from llm_utils import _invoke_with_backoff
+from llm_utils import invoke_with_backoff
 
 load_dotenv()
 
@@ -39,7 +39,7 @@ class ContractAnalysisState(TypedDict):
 # AGENTE 1: RICERCATORE (Reader)
 # -------------------------------------------------------
 
-RESEARCH_QUERIES = [
+RESEARCH_QUERIES_IT = [
     # Rischi
     "clausole penali e sanzioni",
     "condizioni di rescissione e recesso",
@@ -56,15 +56,34 @@ RESEARCH_QUERIES = [
     "incentivi agevolazioni e clausole migliorative",
 ]
 
+RESEARCH_QUERIES_EN = [
+    # Risks
+    "penalty clauses and sanctions",
+    "termination and withdrawal conditions",
+    "deadlines terms and automatic renewals",
+    "liability limitations and indemnities",
+    "obligations of the parties and contractual asymmetries",
+    "jurisdiction and governing law",
+    "confidentiality and non-compete",
+    # Favorable clauses and mitigations
+    "discounts reimbursements and compensations",
+    "works charged to the landlord or deducted from rent",
+    "rights and options of the tenant or buyer",
+    "guarantees in favor of the client or buyer",
+    "incentives benefits and improvement clauses",
+]
+
 def agent_reader(state: ContractAnalysisState) -> ContractAnalysisState:
     """
     Agente Ricercatore: interroga ChromaDB con query tematiche
     bilanciate (rischi + opportunità) e aggrega il contesto.
+    Le query sono nella lingua del contratto per massimizzare il recall semantico.
     """
     vectorstore = state["vectorstore"]
+    queries     = RESEARCH_QUERIES_EN if state["lingua"] == "English" else RESEARCH_QUERIES_IT
     all_chunks: list[str] = []
 
-    for query in RESEARCH_QUERIES:
+    for query in queries:
         chunks = query_vector_db(vectorstore, query, k=3)
         all_chunks.extend(chunks)
 
@@ -249,7 +268,7 @@ def agent_reviewer(state: ContractAnalysisState) -> ContractAnalysisState:
     prompt = LEGAL_REVIEW_PROMPT_EN if state["lingua"] == "English" else LEGAL_REVIEW_PROMPT_IT
     chain  = prompt | llm
 
-    response = _invoke_with_backoff(chain, {"context": state["raw_context"]})
+    response = invoke_with_backoff(chain, {"context": state["raw_context"]})
     return {**state, "legal_analysis": response.content}
 
 
@@ -329,7 +348,7 @@ def agent_reporter(state: ContractAnalysisState) -> ContractAnalysisState:
     prompt = REPORT_PROMPT_EN if state["lingua"] == "English" else REPORT_PROMPT_IT
     chain  = prompt | llm
 
-    response = _invoke_with_backoff(chain, {"analysis": state["legal_analysis"]})
+    response = invoke_with_backoff(chain, {"analysis": state["legal_analysis"]})
     return {**state, "final_report": response.content}
 
 

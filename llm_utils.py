@@ -24,7 +24,7 @@ logger = logging.getLogger(__name__)
         f"(tentativo {retry_state.attempt_number}/4)..."
     ),
 )
-def _invoke_with_backoff(chain, payload: dict) -> object:
+def invoke_with_backoff(chain, payload: dict) -> object:
     """
     Esegue chain.invoke() con retry automatico su RateLimitError.
     """

@@ -5,13 +5,22 @@
 import io
 import streamlit as st
 from PyPDF2 import PdfReader, PdfWriter
-from rag import ingest_pdf, ask_document, check_if_contract
+from rag import ingest_pdf, ask_document, check_if_contract, _get_embeddings
 from agents import run_analysis_pipeline
 from report_generator import markdown_to_pdf_bytes
 import os
 from dotenv import load_dotenv
 
 load_dotenv()
+
+# Forza il caricamento del modello HuggingFace all'avvio di Streamlit,
+# così il primo upload non subisce il delay di ~10s del download.
+# Il caching qui è Streamlit-side; rag.py resta framework-agnostic.
+@st.cache_resource
+def _warm_up_embeddings():
+    return _get_embeddings()
+
+_warm_up_embeddings()
 
 st.set_page_config(
     page_title="Il Jolly Legale",

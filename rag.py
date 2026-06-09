@@ -23,7 +23,7 @@ from langchain_core.prompts import ChatPromptTemplate
 
 from dotenv import load_dotenv
 
-from llm_utils import _invoke_with_backoff
+from llm_utils import invoke_with_backoff
 
 load_dotenv()
 
@@ -33,22 +33,26 @@ CHUNK_OVERLAP   = int(os.getenv("CHUNK_OVERLAP", 200))
 GROQ_API_KEY    = os.getenv("GROQ_API_KEY")
 LLM_MODEL       = os.getenv("LLM_MODEL", "llama-3.3-70b-versatile")
 
-# Embeddings locali — scaricati una volta, poi cached localmente
+# Embeddings locali — singleton a livello di modulo, caricato una sola volta
+# per processo. Nessuna dipendenza da Streamlit: rag.py è framework-agnostic.
 
-import streamlit as st
+_embeddings_instance: HuggingFaceEmbeddings | None = None
 
-@st.cache_resource
 def _get_embeddings() -> HuggingFaceEmbeddings:
     """
-    Carica il modello HuggingFace una sola volta per l'intera
-    durata del processo Streamlit — persiste tra sessioni e
-    ricaricamenti della pagina. Zero overhead dopo il primo avvio.
+    Restituisce il modello HuggingFace, caricandolo la prima volta
+    e riutilizzando l'istanza nelle chiamate successive (module-level singleton).
+    Zero overhead dopo il primo avvio. Framework-agnostic: nessuna dipendenza
+    da Streamlit o da qualsiasi altro framework UI.
     """
-    return HuggingFaceEmbeddings(
-        model_name="sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2",
-        model_kwargs={"device": "cpu"},
-        encode_kwargs={"normalize_embeddings": True},
-    )
+    global _embeddings_instance
+    if _embeddings_instance is None:
+        _embeddings_instance = HuggingFaceEmbeddings(
+            model_name="sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2",
+            model_kwargs={"device": "cpu"},
+            encode_kwargs={"normalize_embeddings": True},
+        )
+    return _embeddings_instance
 
 
 # -------------------------------------------------------
@@ -205,7 +209,7 @@ def check_if_contract(pdf_bytes: bytes) -> bool:
 
     try:
         # Tronca prudenzialmente per non saturare il context del classificatore
-        response = _invoke_with_backoff(chain, {"incipit": incipit[:4000]})
+        response = invoke_with_backoff(chain, {"incipit": incipit[:4000]})
         answer = response.content.strip().upper()
         return "SI" in answer
     except Exception:
@@ -389,7 +393,7 @@ Cronologia conversazione:
     )
 
     chain    = prompt | llm
-    response = _invoke_with_backoff(chain, {
+    response = invoke_with_backoff(chain, {
     "context":  context,
     "history":  history_text if history_text else "Nessuna conversazione precedente.",
     "question": query,})
