@@ -1,6 +1,8 @@
 # ⚖️ Il Jolly Legale
 ### AI-Powered Contract Analysis — Enterprise Grade · Zero Trust · Zero Cost
 
+![CI](https://github.com/LucaMureddu/jolly-legale/actions/workflows/ci.yml/badge.svg)
+
 🔗 **[Prova l'app live →](https://jolly-legale.streamlit.app/)**
 
 ![Il Jolly Legale — Interface](screenshot.png)
